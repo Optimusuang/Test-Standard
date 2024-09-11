@@ -1,0 +1,226 @@
+测试规范	
+1	背景	
+2	开发者测试的目标	
+3	测试框架选型指南	
+3.1	Java测试框架选型	
+4	用例编写规范	
+4.1	用例的通用要求	
+4.1.1	【建议】测试用例命定规范：should_xxx_when_xxx, 使用下划线方式而不是驼峰。	
+4.1.2	【规则】测试用例代码是分成三段式的，包括give-when-then, 每段之间通过空行提高可读性	
+4.1.3	【规则】禁止写出永远成功的测试用例	
+4.1.4	【建议】每个用例应该是单一职责的，只测试一个场景，用例里面禁止使用switch-case、if/else等。	
+4.1.5	【规则】用例之间应该是独立的，用例之间不能相互调用，用例之间调用不能有调用顺序；	
+4.1.6	【规则】用例应该是可以重复执行的，不受外界环境的影响	
+4.1.7	【规则】不能为了测试添加相关的业务代码，如果有，也是和业务代码物理隔离的。	
+4.1.8	【规则】测试中禁止使用System.out等方式输出后进行人工判断，必须使用assert来进行自动验证。	
+4.1.9	【规则】只测试public方法	
+4.1.10	【规则】合理使用Test Double，并且优先使用Stub。	
+4.1.11	【建议】编写assert时建议包括错误信息	
+4.2	Java用例的要求	
+4.2.1	【规则】Java的单元测试代码必须写在src/test/java目录下，配置文件等必须写在src/test/resources目录下。	
+4.2.2	【规则】所有以类为测试对象的测试用例类命名为：”<被测试类的类名>+Test”	
+4.2.3	【规则】所有以API为测试对象的测试用例类命名为: ”<被测试Controller类的类名>+Test”	
+4.2.4	【规则】使用注解@Test来标识测试用例	
+4.2.5	【规则】对于测试异常，必须使用expected。如果使用JUnit5，可以使用assertThrows	
+5	扩展资料	
+5.1	测试用例编写的其他原则	
+5.1.1	FIRST原则：什么是好的测试用例	
+5.1.2	RIGTH-BICEP原则：测什么，怎么测	
+5.1.3	CORRECT原则：如何确定测试边界	
+5.2	测试用例的设计方法	
+5.2.1	识别测试因子	
+5.2.2	确定因子取值	
+5.2.3	确定因子组合	
+5.2.4	白盒覆盖测试	
+
+
+
+##### 1背景
+为了更好的落地云服务的开发者测试，保证开发者测试的代码具有较好可读性，可维护性，所以对于开发者测试代码也有相关的编码规范要求。
+对于不同的编程语言，不同的测试框架，用例规范的编写要求可能不一样，结合云服务的开发者测试要求，制定了《xxxxxx开发者测试规范》，各个业务团队进行开发者测试时可以参考此规范。Committer在进行代码审核的时候也可以参考文档进行代码看护。
+
+##### 2开发者测试的目标
+Tests As Specification：测试作为规范，描述需求
+Bug Repellent：Bug预防，而不仅仅是检测
+Defect Localization：缺陷局部化，快速定位bug的位置
+Tests As Documentation：测试即文档，描述API如何使用
+Tests As Safety Net：安全防护网
+Do No Harm：不要伤害现有代码
+Fully Automated Tests：全自动化测试
+Self-Checking Tests：自我检查，Assert判断结果正确性
+Repeatable Tests：可重复调用，结果是确定的
+Simple Tests：测试代码是简单的，是正确的
+Expressive Tests：表达力的测试
+Separation of Concern：分离关注点，一个测试测试一个小场景
+Robust Tests：稳健性测试
+
+##### 3测试框架选型指南
+3.1Java测试框架选型
+基础xUnit框架：推荐JUnit + AssertJ。 AssertJ在可读性和特性上面比Hamcrest更加具有优势。
+Mock框架：Powermock, mockito, Jmockit。
+Spring的测试框架：spring-test包, 重点关注MockMvc，可以模拟发送Http请求。
+本地数据库测试框架：MariaDB内存数据库。
+
+##### 4用例编写规范
+4.1用例的通用要求
+
+4.1.1【建议】测试用例命定规范：should_xxx_when_xxx, 使用下划线方式而不是驼峰。
+
+4.1.2【规则】测试用例代码是分成三段式的，包括give-when-then, 每段之间通过空行提高可读性
+```java
+@Test
+public void should_format_correct_when_format_parkingLot() {
+    // Given
+    ParkingLot lot = new ParkingLot(10);
+    String carId = "123";
+    Car car1 = new Car(carId);
+    lot.park(car1);
+
+    String expected = "ParkingLot(1/10)";
+
+    // When
+    String actualFormatString = lot.format(new TreeFormatter());
+    
+    // Then
+    Assert.assertEquals(expected, actualFormatString);
+}
+```
+
+Given表示准备测试数据
+When表示调用待测试的模块
+Then表示测试结果assert
+
+4.1.3【规则】禁止写出永远成功的测试用例
+这种测试用例没有assert，一般是用来完成代码覆盖率指标的的，用例没有检查业务代码是否真的保证成功，但是测试报告却给出了虚假的信息。
+
+4.1.4【建议】每个用例应该是单一职责的，只测试一个场景，用例里面禁止使用switch-case、if/else等。
+
+4.1.5【规则】用例之间应该是独立的，用例之间不能相互调用，用例之间调用不能有调用顺序；
+
+4.1.6【规则】用例应该是可以重复执行的，不受外界环境的影响
+
+4.1.7【规则】不能为了测试添加相关的业务代码，如果有，也是和业务代码物理隔离的。
+
+4.1.8【规则】测试中禁止使用System.out等方式输出后进行人工判断，必须使用assert来进行自动验证。
+
+4.1.9【规则】只测试public方法
+单元测试应该对公有API进行测试，私有方法的测试应该由公有方法来覆盖。原因如下：
+1.私有方法是不对外暴露，在用例中通过高级手法调用私有方法，打破类的封装。
+2.私有方法在重构时是不稳定的，入参、返回值及方法名都是不断变化的。 
+
+4.1.10【规则】合理使用Test Double，并且优先使用Stub。
+Test Double包括Dummy, Spy, Stub, Mock, Fake。
+什么情况下才能使用测试替身：
+硬件依赖
+现实环境中难以产生的输入
+慢速对象 —— 网络，数据库等等
+对于易变事物的依赖 —— 时钟
+对于尚未开发完成事物的依赖
+
+过量使用Mock会带来：
+重构时对于Mock的大量修改带来的成本
+Mock对象的非真实性带来测试有效性的降低
+
+禁止乱用Mock随意进行打桩，尽量使用真实代码，如果必须要使用Mock，请考虑：
+是用例的级别太低造成的结果；
+还是粗陋的设计（用例设计和产品设计）所导致的结果？
+
+如果真的要使用Mock，看是否可以退化成Stub。
+
+4.1.11【建议】编写assert时建议包括错误信息
+```java
+@Test
+public void should_not_equals_when_compare_tow_strings() {
+    assertEquals("foo", "bar");
+    // 推荐使用下面的形式:
+    assertEquals("Foo does not equals bar", "foo", "bar");
+}
+```
+
+
+4.2Java用例的要求
+
+4.2.1【规则】Java的单元测试代码必须写在src/test/java目录下，配置文件等必须写在src/test/resources目录下。
+
+4.2.2【规则】所有以类为测试对象的测试用例类命名为：”<被测试类的类名>+Test”
+对于微服务架构中的Service，Domain都按照这个原则。
+
+4.2.3【规则】所有以API为测试对象的测试用例类命名为: ”<被测试Controller类的类名>+Test”
+对于微服务架构中的Controller按照这个原则。
+
+4.2.4【规则】使用注解@Test来标识测试用例
+JUnit4中，应该使用@Test来标记测试函数；
+JUnit5中，可以使用@Test, @RepeatedTest, @TestFactory, @TestTemplate 或者 @ParameterizedTest来标记。
+
+4.2.5【规则】对于测试异常，必须使用expected。如果使用JUnit5，可以使用assertThrows
+```java
+@Test(expected=Exception.class)
+public void should_throw_exception_when_do_something() {
+    doSomething();
+}
+```
+
+##### 5扩展资料
+5.1测试用例编写的其他原则
+
+5.1.1FIRST原则：什么是好的测试用例
+Fast--测试的运行速度将直接决定自动化的反馈速度，速度越快，越能提早发现问题。
+Isolated--每一个测试用例需要保证完全独立运行，互不依赖，这样才能保证测试运行不被干扰，从而能够进行并行运行甚至分布式运行，使得测试运行更加Fast。
+Repeatable--每一个测试用例在运行条件不变的情况下，不论重复运行多少次，运行结果必须完全一致（幂等）。
+Self-Validating--测试用例必须能够自动告知（断言）运行结果，而不依赖人工进行判断。
+Timely--编写自动化测试是一种好的习惯，为了保证能够及时得到反馈，必须及时编写自动化测试而不拖延，一旦拖延，就很难补回来。为了能够将这件事情做到极致，那么就要做到“测试先行（Test First）”，直至“测试驱动开发（Test-Driven Development）
+
+5.1.2RIGTH-BICEP原则：测什么，怎么测
+Right--可以通过自动化测试验证待测系统（SUT）的是否符合设计要求。为了能够符合“设计的要求”，那么必须提前清晰定义和理解“设计的要求”是什么（验收条件）。
+Boundary Conditions--对于待测系统（SUT），需要通过自动化测试确保必要的边界条件都得到了测试。
+Inverse Relationships--对于一些待测系统（SUT），可能需要测试其反向逻辑。比如Encode/Decode、压缩解压缩、数据插入和查询。
+Cross-Check--我们可以通过“另一种方法”，对待测系统（SUT）进行测试。
+Error Conditions--测试可以用来发现异常，也可以用来验证异常。如果异常路径（Sad-Path）对我们会产生重大影响，或者可能具备独立业务价值，那么我们一定要保证异常路径被测试覆盖。
+Performance--虽然我们不优先考虑性能问题，但是一旦发生性能问题，自动化测试就能够成为我们得到及时反馈或对问题进行定位的有效手段。
+
+5.1.3CORRECT原则：如何确定测试边界
+Conformance：一致性。运行结果是否符合预期的规则。预期的可能是成功，也可能是失败。
+Ordering：是否需要关注顺序。有序 or 无序？
+Range：值是否位于合理的最小值和最大值之间，及在此区间内运行的结果是否符合预期。
+Reference：待测系统（SUT）是否正确的引用了所依赖组件（DOC）。
+Existence：待测系统（SUT）是否会因为一些关键要素的存在性被影响。（NULL等空值问题）
+Cardinality：计数。对于某些数值的使用或计算，是否会出现超出预期情况。
+Time (absolute and relative)：与时间相关的问题，是否需要被测试。事情的发生是否有序，是否在正确的时间。
+
+5.2测试用例的设计方法
+测试设计定义：基于被测对象的测试依据，通过一定的分析设计方法得到测试用例的活动。这些测试用例可以实现特定的测试覆盖（测试覆盖要与被测对象本身的风险程度相匹配）。
+
+测试设计可以划分为4个步骤：
+a)识别测试因子
+b)确定因子取值：常见方法有等价类划分，边界值分析
+c)确定因子组合：基础方法有BC，EC，AC，N-wise
+d)确定预期结果
+ 
+
+5.2.1识别测试因子
+
+5.2.2确定因子取值
+等价类划分：
+定义：按因子的约束对其取值范围进行等价类划分，等价类中任意选取的数据对系统功能的影响是相同的，通过对多个等价类中有代表性的数据的覆盖达到对该测试输入的覆盖。
+分类：可以分为有效等价类和无效等价类：
+有效等价类：对于程序的规格而言是有意义、合理的数据输入的集合，用于测试程序是否实现了规格说明中约定的功能和性能要求。
+无效等价类：对于程序的规格说明而言是不合理的数据输入，用于测试程序是否能经受得起非法输入的考验。
+边界值分析：
+经验告诉我们，大量的错误是发生在输入或输出范围的边界上，边界值分析就是在划分的等价类区域的边界及其附近进行测试数据的选取。是对等价类划分的一种补充。
+几条经验：
+如果输入条件规定了值的范围，则应取刚达到这个范围的边界的值，以及刚刚超越这个范围边界的值作为测试输入数据。
+如果输入是有序集合，则应选取集合的第一个元素和最后一个元素作为测试输入数据。
+
+5.2.3确定因子组合
+AC （All Combinations）
+EC（ Each Choice ）
+BC（Basic Choice）
+N-wise
+
+5.2.4白盒覆盖测试
+1）语句覆盖（Line coverage）
+2）判定覆盖（Decision coverage）
+3）条件覆盖（Condition coverage）
+4）判定/条件覆盖（Decision/Condition coverage）
+5）条件组合覆盖（branch condition combination）
+6）路径覆盖（Path coverage）
